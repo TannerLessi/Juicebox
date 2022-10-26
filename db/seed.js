@@ -1,24 +1,33 @@
 // grab our client with destructuring from the export in index.js
-const {
-  client,
-  getAllUsers,
-  createUser
-} = require('./index');
+const { client, getAllUsers, createUser } = require("./index");
 
 async function createInitialUsers() {
   try {
     console.log("Starting to create users...");
 
-    const albert = await createUser({ username: 'albert', password: 'bertie99' });
-    const sandra = await createUser({ username: 'sandra', password: '2sandy4me'});
-    const glamgal = await createUser({username: 'glamgal', password: 'soglam'}); 
-   
+    const albert = await createUser({
+      username: "albert",
+      password: "bertie99",
+      name: "Albert",
+      location: "USA",
+    });
+    const sandra = await createUser({
+      username: "sandra",
+      password: "2sandy4me",
+      name: "Sandra",
+      location: "USA",
+    });
+    const glamgal = await createUser({
+      username: "glamgal",
+      password: "soglam",
+      name: "Glam",
+      location: "USA",
+    });
 
     console.log(albert);
-    console.log(albertTwo);
 
     console.log("Finished creating users!");
-  } catch(error) {
+  } catch (error) {
     console.error("Error creating users!");
     throw error;
   }
@@ -47,7 +56,10 @@ async function createTables() {
       CREATE TABLE users (
         id SERIAL PRIMARY KEY,
         username varchar(255) UNIQUE NOT NULL,
-        password varchar(255) NOT NULL
+        password varchar(255) NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        location VARCHAR(255) NOT NULL,
+        active BOOLEAN DEFAULT true
       );
     `);
 
@@ -61,10 +73,9 @@ async function createTables() {
 async function rebuildDB() {
   try {
     client.connect();
-    
-    await createInitialUsers();
     await dropTables();
     await createTables();
+    await createInitialUsers();
   } catch (error) {
     throw error;
   }
@@ -83,7 +94,6 @@ async function testDB() {
     throw error;
   }
 }
-
 
 rebuildDB()
   .then(testDB)
