@@ -1,8 +1,28 @@
 // grab our client with destructuring from the export in index.js
 const {
   client,
-  getAllUsers
+  getAllUsers,
+  createUser
 } = require('./index');
+
+async function createInitialUsers() {
+  try {
+    console.log("Starting to create users...");
+
+    const albert = await createUser({ username: 'albert', password: 'bertie99' });
+    const sandra = await createUser({ username: 'sandra', password: '2sandy4me'});
+    const glamgal = await createUser({username: 'glamgal', password: 'soglam'}); 
+   
+
+    console.log(albert);
+    console.log(albertTwo);
+
+    console.log("Finished creating users!");
+  } catch(error) {
+    console.error("Error creating users!");
+    throw error;
+  }
+}
 
 async function dropTables() {
   try {
@@ -41,7 +61,8 @@ async function createTables() {
 async function rebuildDB() {
   try {
     client.connect();
-
+    
+    await createInitialUsers();
     await dropTables();
     await createTables();
   } catch (error) {
