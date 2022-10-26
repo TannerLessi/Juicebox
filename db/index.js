@@ -120,7 +120,7 @@ async function getPostsByUser(userId) {
       SELECT * FROM posts
       WHERE "authorId"=${ userId };
     `);
-
+    console.log("rows");
     return rows;
   } catch (error) {
     throw error;
@@ -129,8 +129,9 @@ async function getPostsByUser(userId) {
 
 async function getUserById(userId) {
   try {
-    const { object, rows, user} = await client.query(
-      `
+    const { user } = await client.query(
+      `SELECT posts FROM 
+      WHERE "authorId"=${ userId };
       
       `
     )
