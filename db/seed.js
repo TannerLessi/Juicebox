@@ -1,5 +1,9 @@
 // grab our client with destructuring from the export in index.js
-const { client, getAllUsers, createUser, updateUser } = require("./index");
+const { client, getAllUsers, createUser, updateUser, updatePost,
+  getAllPosts,
+  getUserById,
+  createPost
+ } = require("./index");
 
 async function createInitialUsers() {
   try {
@@ -81,12 +85,41 @@ async function createTables() {
   }
 }
 
+async function createInitialPosts() {
+  try {
+    const [albert, sandra, glamgal] = await getAllUsers();
+    console.log("starting to create posts!")
+    await createPost({
+      authorId: albert.id,
+      title: "First Post",
+      content: "This is my first post. I hope I love writing blogs as much as I love writing them."
+    });
+
+    await createPost({
+      authorId: sandra.id,
+      title: "sandra post",
+      content: "My name is sandra."
+    });
+
+    await createPost({
+      authorId: glamgal.id,
+      title: "glam post",
+      content: "This is glam post."
+    });
+
+    // a couple more
+  } catch (error) {
+    throw error;
+  }
+}
+
 async function rebuildDB() {
   try {
     client.connect();
     await dropTables();
     await createTables();
     await createInitialUsers();
+    await createInitialPosts();
   } catch (error) {
     throw error;
   }
@@ -96,20 +129,36 @@ async function testDB() {
   try {
     console.log("Starting to test database...");
 
-    console.log("Calling getAllUsers")
+    console.log("Calling getAllUsers");
     const users = await getAllUsers();
     console.log("Result:", users);
 
-    console.log("Calling updateUser on users[0]")
+    console.log("Calling updateUser on users[0]");
     const updateUserResult = await updateUser(users[0].id, {
       name: "Newname Sogood",
       location: "Lesterville, KY"
     });
     console.log("Result:", updateUserResult);
 
+    console.log("Calling getAllPosts");
+    const posts = await getAllPosts();
+    console.log("Result:", posts);
+
+    console.log("Calling updatePost on posts[0]");
+    const updatePostResult = await updatePost(posts[0].id, {
+      title: "New Title",
+      content: "Updated Content",
+      active:  "True"
+    });
+    console.log("Result:", updatePostResult);
+
+    console.log("Calling getUserById with 1");
+    const albert = await getUserById(1);
+    console.log("Result:", albert);
+
     console.log("Finished database tests!");
   } catch (error) {
-    console.error("Error testing database!");
+    console.log("Error during testDB");
     throw error;
   }
 }

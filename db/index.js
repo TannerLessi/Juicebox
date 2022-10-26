@@ -32,16 +32,15 @@ async function createUser({ username, password, name, location }) {
 }
 async function createPost({ authorId, title, content}) {
   try {
-    const { rows: [ user ] } = await client.query(
+    const { rows: [ post ] } = await client.query(
       `
-    INSERT INTO users(authorId, title, content) 
-    VALUES($1, $2, $3, $4) 
-    ON CONFLICT (authorId) DO NOTHING 
+    INSERT INTO posts("authorId", title, content) 
+    VALUES($1, $2, $3) 
     RETURNING *;
   `,
       [authorId, title, content]
     );
-    return user;
+    return post;
   } catch (error) {
     throw error;
   }
@@ -50,6 +49,7 @@ async function createPost({ authorId, title, content}) {
 
 async function updateUser(id, fields = {}) {
   // build the set string
+  console.log("id", id);
   const setString = Object.keys(fields).map(
     (key, index) => `"${ key }"=$${ index + 1 }`
   ).join(', ');
@@ -73,12 +73,11 @@ async function updateUser(id, fields = {}) {
   }
 }
 
-async function updatePost(id, {
-  title,
-  content,
-  active
+async function updatePost(id, fields = {
 }) {
-  const setString = Object.keys(title, content, active).map(
+  console.log(fields);
+  console.log("updating the posts")
+  const setString = Object.keys(fields).map(
     (key, index) => `"${ key }"=$${ index + 1 }`
   ).join(', ');
 
@@ -87,14 +86,13 @@ async function updatePost(id, {
     return;
   }
   try {
-    const { rows: [ user ] } = await client.query(`
+    const { rows: [ posts ] } = await client.query(`
       UPDATE posts
       SET ${ setString }
       WHERE id=${ id }
-      RETURNING *;
-    `, Object.values(title, content, active));
-
-    return user;
+      RETURNING posts;
+    `, Object.values(fields));
+    return posts;
   } catch (error) {
     throw error;
   }
@@ -103,7 +101,7 @@ async function updatePost(id, {
 async function getAllPosts() {
   try {
     const { rows } = await client.query(
-      `SELECT title, content, active
+      `SELECT id, title, content, active
       FROM posts;
     `
     );
@@ -118,7 +116,7 @@ async function getPostsByUser(userId) {
   try {
     const { rows } = await client.query(`
       SELECT * FROM posts
-      WHERE "authorId"=${ userId };
+      WHERE "authorId"=${ userId }
     `);
     console.log("rows");
     return rows;
@@ -129,12 +127,22 @@ async function getPostsByUser(userId) {
 
 async function getUserById(userId) {
   try {
-    const { user } = await client.query(
-      `SELECT posts FROM 
-      WHERE "authorId"=${ userId };
-      
+    const { rows:[user] } = await client.query(
+      `SELECT * FROM users
+      WHERE id=${ userId };
       `
-    )
+    );
+    if (!user) {
+      return null; 
+    }
+      
+    delete user.password; 
+    user.posts = getPostsByUser(userId);
+    console.log(user);
+    return user;
+  } catch (error) {
+    throw error;
+  }
   }
   // first get the user (NOTE: Remember the query returns 
     // (1) an object that contains 
@@ -147,12 +155,16 @@ async function getUserById(userId) {
   // get their posts (use getPostsByUser)
   // then add the posts to the user object with key 'posts'
   // return the user object
-}
 
 // and export them
 module.exports = {
   client,
   getAllUsers,
   createUser,
-  updateUser
+  updateUser,
+  updatePost,
+  getAllPosts,
+  getPostsByUser,
+  getUserById,
+  createPost
 };
