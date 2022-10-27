@@ -10,6 +10,7 @@ const {
   createPost,
   createTags,
   addTagsToPost,
+  getPostsByTagName
 } = require("./index");
 
 async function createInitialUsers() {
@@ -34,8 +35,6 @@ async function createInitialUsers() {
       name: "Glam",
       location: "USA",
     });
-
-    console.log(albert);
 
     console.log("Finished creating users!");
   } catch (error) {
@@ -131,7 +130,7 @@ async function createInitialPosts() {
       authorId: sandra.id,
       title: "sandra post",
       content: "My name is sandra.",
-      tags: ["#happy", "#anything"],
+      tags: ["#happy", "#youcandoanything"],
     });
 
     await createPost({
@@ -203,13 +202,15 @@ async function testDB() {
     const posts = await getAllPosts();
     console.log("Result:", posts);
 
-    console.log("Calling updatePost on posts[0]");
-    const updatePostResult = await updatePost(posts[0].id, {
-      title: "New Title",
-      content: "Updated Content",
-      active: "True",
+    console.log("Calling updatePost on posts[1], only updating tags");
+    const updatePostTagsResult = await updatePost(posts[0].id, {
+      tags: ["#youcandoanything", "#redfish", "#bluefish"]
     });
-    console.log("Result:", updatePostResult);
+    console.log("Result:", updatePostTagsResult);
+
+    console.log("Calling getPostsByTagName with #happy");
+    const postsWithHappy = await getPostsByTagName("#happy");
+    console.log("Result:", postsWithHappy);
 
     console.log("Calling getUserById with 1");
     const albert = await getUserById(1);

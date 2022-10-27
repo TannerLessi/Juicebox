@@ -193,30 +193,49 @@ async function updateUser(id, fields = {}) {
   }
 }
 
-async function updatePost(id, fields = {}) {
+async function updatePost(postId, fields = {}) {
   console.log(fields);
   console.log("updating the posts");
+
+  const { tags } = fields; 
+  delete fields.tags;
+
   const setString = Object.keys(fields)
     .map((key, index) => `"${key}"=$${index + 1}`)
     .join(", ");
 
   // return early if this is called without fields
-  if (setString.length === 0) {
-    return;
-  }
   try {
-    const {
-      rows: [posts],
-    } = await client.query(
+    if (setString.length > 0) {
+      await client.query(
       `
       UPDATE posts
       SET ${setString}
-      WHERE id=${id}
-      RETURNING posts;
+      WHERE id=${postId}
+      RETURNING *;
     `,
       Object.values(fields)
     );
-    return posts;
+      }
+    if (tags === undefined) {
+      return await getPostById(postId);
+    }
+
+    const tagList = await createTags(tags);
+    const tagListIdString = tagList.map(
+      tag => `${ tag.id }`
+    ).join(', ');
+
+    await client.query (`
+    DELETE FROM post_tags
+    WHERE "tagId"
+    NOT IN (${ tagListIdString })
+    AND "postId"=$1;
+    `, [postId]);
+
+    await addTagsToPost(postId, tagList);
+
+    return await getPostById(postId)
   } catch (error) {
     throw error;
   }
@@ -279,19 +298,24 @@ async function getUserById(userId) {
     throw error;
   }
 }
-// first get the user (NOTE: Remember the query returns
-// (1) an object that contains
-// (2) a `rows` array that (in this case) will contain
-// (3) one object, which is our user.
-// if it doesn't exist (if there are no `rows` or `rows.length`), return null
 
-// if it does:
-// delete the 'password' key from the returned object
-// get their posts (use getPostsByUser)
-// then add the posts to the user object with key 'posts'
-// return the user object
+async function getPostsByTagName(tagName) {
+  try {
+    const { rows: postIds } = await client.query(`
+    SELECT posts.id
+    FROM posts
+    JOIN post_tags ON posts.id=post_tags."postId"
+    JOIN tags ON tags.id=post_tags."tagId"
+    WHERE tags.name=$1;
+    `, [tagName]);
 
-// and export them
+    return await Promise.all(postIds.map( post => getPostById(post.id)  
+    ));
+  } catch (error) {
+    throw error;
+  }
+}
+
 module.exports = {
   client,
   getAllUsers,
@@ -305,4 +329,5 @@ module.exports = {
   getPostById,
   addTagsToPost,
   createTags,
+  getPostsByTagName
 };
