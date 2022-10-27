@@ -54,24 +54,33 @@ async function createTags(tagList) {
   if (tagList.length === 0) {
     return;
   }
-
+  
   // need something like: $1), ($2), ($3
   const insertValues = tagList.map((_, index) => `$${index + 1}`).join("), (");
   // then we can use: (${ insertValues }) in our string template
-
+  
   // need something like $1, $2, $3
   const selectValues = tagList.map((_, index) => `$${index + 1}`).join(", ");
   // then we can use (${ selectValues }) in our string template
-
+  console.log({insertValues, selectValues, tagList})
   try {
-    const {
-      rows: [tags],
-    } = await client.query(
-      `INSERT INTO tags(name)
-    VALUES ($1), ($2), ($3)
-    ON CONFLICT (name) DO NOTHING;`
-    );
-    return tags;
+    await client.query(
+      `INSERT INTO tags (name)
+      VALUES  (${ insertValues })
+      ON CONFLICT (name) DO NOTHING;`
+      ,tagList);
+      
+
+    const { rows } = await client.query(
+      `SELECT * FROM tags
+      WHERE name
+      IN (${ selectValues })
+      `
+    ,tagList);
+    console.log("This should run!")
+       // select all tags where the name is in our taglist
+    // return the rows from the query
+    return rows;
   } catch (error) {
     throw error;
   }
@@ -80,7 +89,7 @@ async function createTags(tagList) {
 async function createPostTag(postId, tagId) {
   try {
     const {
-      post: [tags],
+      row,
     } = await client.query(
       `
   INSERT INTO post_tags("postId", "tagId")
@@ -89,8 +98,7 @@ async function createPostTag(postId, tagId) {
 `,
       [postId, tagId]
     );
-    console.log("postId,postTag", postId, tagId);
-    return tags;
+    return row;
   } catch (error) {
     throw error;
   }

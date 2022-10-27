@@ -8,6 +8,8 @@ const {
   getAllPosts,
   getUserById,
   createPost,
+  createTags,
+  addTagsToPost
 } = require("./index");
 
 async function createInitialUsers() {
@@ -64,7 +66,6 @@ async function createTables() {
   try {
     console.log("Starting to build tables...");
 
-    console.log("Creating users table");
     await client.query(`
       CREATE TABLE users (
         id SERIAL PRIMARY KEY,
@@ -76,8 +77,8 @@ async function createTables() {
       );
 
     `);
+    console.log("Creating users table");
 
-    console.log("Creating posts table");
     await client.query(`
     CREATE TABLE posts (
       id SERIAL PRIMARY KEY,
@@ -87,23 +88,25 @@ async function createTables() {
       active BOOLEAN DEFAULT true
     );
   `);
+ console.log("Creating posts table");
 
-    console.log("Creating tags table");
     await client.query(`
     CREATE TABLE tags (
       id SERIAL PRIMARY KEY,
-      name VARCHAR(255) UNIQUE NOT NULL,
-
+      name VARCHAR(255) UNIQUE NOT NULL
     );
 `);
-    console.log("Creating post_tags table");
+
+console.log("Creating tags table");
+  
     await client.query(`
     CREATE TABLE post_tags (
-      "postId" INTEGER REFERENCES posts(id) UNIQUE NOT NULL,
-      "tagId" INTEGER REFERENCES tags(id) UNIQUE NOT NULL,
-
+      "postId" INTEGER REFERENCES posts(id),
+      "tagId" INTEGER REFERENCES tags(id),
+      UNIQUE ("postId", "tagId")
     );
 `);
+console.log("Creating post_tags table");
 
     console.log("Finished building tables!");
   } catch (error) {
@@ -151,7 +154,7 @@ async function createInitialTags() {
       "#youcandoanything",
       "#catmandoeverything",
     ]);
-
+    console.log("starting to add post tags!")
     const [postOne, postTwo, postThree] = await getAllPosts();
 
     await addTagsToPost(postOne.id, [happy, inspo]);
