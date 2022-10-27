@@ -1,9 +1,14 @@
 // grab our client with destructuring from the export in index.js
-const { client, getAllUsers, createUser, updateUser, updatePost,
+const {
+  client,
+  getAllUsers,
+  createUser,
+  updateUser,
+  updatePost,
   getAllPosts,
   getUserById,
-  createPost
- } = require("./index");
+  createPost,
+} = require("./index");
 
 async function createInitialUsers() {
   try {
@@ -42,6 +47,8 @@ async function dropTables() {
     console.log("Starting to drop tables...");
 
     await client.query(`
+      DROP TABLE IF EXISTS post_tags;
+      DROP TABLE IF EXISTS tags;
       DROP TABLE IF EXISTS posts;
       DROP TABLE IF EXISTS users;
     `);
@@ -78,6 +85,22 @@ async function createTables() {
       );
     `);
 
+    await client.query(`
+        CREATE TABLE tags (
+          id SERIAL PRIMARY KEY,
+          name VARCHAR(255) UNIQUE NOT NULL,
+
+        );
+    `);
+
+    await client.query(`
+    CREATE TABLE post_tags (
+      "postId" INTEGER REFERENCES posts(id) UNIQUE NOT NULL,
+      "tagId" INTEGER REFERENCES tags(id) UNIQUE NOT NULL,
+
+    );
+`);
+
     console.log("Finished building tables!");
   } catch (error) {
     console.error("Error building tables!");
@@ -88,23 +111,24 @@ async function createTables() {
 async function createInitialPosts() {
   try {
     const [albert, sandra, glamgal] = await getAllUsers();
-    console.log("starting to create posts!")
+    console.log("starting to create posts!");
     await createPost({
       authorId: albert.id,
       title: "First Post",
-      content: "This is my first post. I hope I love writing blogs as much as I love writing them."
+      content:
+        "This is my first post. I hope I love writing blogs as much as I love writing them.",
     });
 
     await createPost({
       authorId: sandra.id,
       title: "sandra post",
-      content: "My name is sandra."
+      content: "My name is sandra.",
     });
 
     await createPost({
       authorId: glamgal.id,
       title: "glam post",
-      content: "This is glam post."
+      content: "This is glam post.",
     });
 
     // a couple more
@@ -136,7 +160,7 @@ async function testDB() {
     console.log("Calling updateUser on users[0]");
     const updateUserResult = await updateUser(users[0].id, {
       name: "Newname Sogood",
-      location: "Lesterville, KY"
+      location: "Lesterville, KY",
     });
     console.log("Result:", updateUserResult);
 
@@ -148,7 +172,7 @@ async function testDB() {
     const updatePostResult = await updatePost(posts[0].id, {
       title: "New Title",
       content: "Updated Content",
-      active:  "True"
+      active: "True",
     });
     console.log("Result:", updatePostResult);
 
