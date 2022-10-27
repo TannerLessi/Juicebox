@@ -79,7 +79,9 @@ async function createTags(tagList) {
 
 async function createPostTag(postId, tagId) {
   try {
-    await client.query(
+    const {
+      post: [tags],
+    } = await client.query(
       `
   INSERT INTO post_tags("postId", "tagId")
   VALUES ($1, $2)
@@ -87,6 +89,8 @@ async function createPostTag(postId, tagId) {
 `,
       [postId, tagId]
     );
+    console.log("postId,postTag", postId, tagId);
+    return tags;
   } catch (error) {
     throw error;
   }

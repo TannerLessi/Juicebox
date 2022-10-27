@@ -64,6 +64,7 @@ async function createTables() {
   try {
     console.log("Starting to build tables...");
 
+    console.log("Creating users table");
     await client.query(`
       CREATE TABLE users (
         id SERIAL PRIMARY KEY,
@@ -73,26 +74,29 @@ async function createTables() {
         location VARCHAR(255) NOT NULL,
         active BOOLEAN DEFAULT true
       );
+
     `);
 
+    console.log("Creating posts table");
     await client.query(`
-      CREATE TABLE posts (
-        id SERIAL PRIMARY KEY,
-        "authorId" INTEGER REFERENCES users(id) NOT NULL,
-        title VARCHAR(255) NOT NULL,
-        content TEXT NOT NULL,
-        active BOOLEAN DEFAULT true
-      );
-    `);
+    CREATE TABLE posts (
+      id SERIAL PRIMARY KEY,
+      "authorId" INTEGER REFERENCES users(id) NOT NULL,
+      title VARCHAR(255) NOT NULL,
+      content TEXT NOT NULL,
+      active BOOLEAN DEFAULT true
+    );
+  `);
 
+    console.log("Creating tags table");
     await client.query(`
-        CREATE TABLE tags (
-          id SERIAL PRIMARY KEY,
-          name VARCHAR(255) UNIQUE NOT NULL,
+    CREATE TABLE tags (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(255) UNIQUE NOT NULL,
 
-        );
-    `);
-
+    );
+`);
+    console.log("Creating post_tags table");
     await client.query(`
     CREATE TABLE post_tags (
       "postId" INTEGER REFERENCES posts(id) UNIQUE NOT NULL,
@@ -137,6 +141,30 @@ async function createInitialPosts() {
   }
 }
 
+async function createInitialTags() {
+  try {
+    console.log("Starting to create tags...");
+
+    const [happy, sad, inspo, catman] = await createTags([
+      "#happy",
+      "#worst-day-ever",
+      "#youcandoanything",
+      "#catmandoeverything",
+    ]);
+
+    const [postOne, postTwo, postThree] = await getAllPosts();
+
+    await addTagsToPost(postOne.id, [happy, inspo]);
+    await addTagsToPost(postTwo.id, [sad, inspo]);
+    await addTagsToPost(postThree.id, [happy, catman, inspo]);
+
+    console.log("Finished creating tags!");
+  } catch (error) {
+    console.log("Error creating tags!");
+    throw error;
+  }
+}
+
 async function rebuildDB() {
   try {
     client.connect();
@@ -144,6 +172,7 @@ async function rebuildDB() {
     await createTables();
     await createInitialUsers();
     await createInitialPosts();
+    await createInitialTags();
   } catch (error) {
     throw error;
   }
