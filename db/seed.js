@@ -9,7 +9,7 @@ const {
   getUserById,
   createPost,
   createTags,
-  addTagsToPost
+  addTagsToPost,
 } = require("./index");
 
 async function createInitialUsers() {
@@ -82,13 +82,13 @@ async function createTables() {
     await client.query(`
     CREATE TABLE posts (
       id SERIAL PRIMARY KEY,
-      "authorId" INTEGER REFERENCES users(id) NOT NULL,
+      "authorId" INTEGER REFERENCES users(id) ,
       title VARCHAR(255) NOT NULL,
       content TEXT NOT NULL,
       active BOOLEAN DEFAULT true
     );
   `);
- console.log("Creating posts table");
+    console.log("Creating posts table");
 
     await client.query(`
     CREATE TABLE tags (
@@ -97,8 +97,8 @@ async function createTables() {
     );
 `);
 
-console.log("Creating tags table");
-  
+    console.log("Creating tags table");
+
     await client.query(`
     CREATE TABLE post_tags (
       "postId" INTEGER REFERENCES posts(id),
@@ -106,7 +106,7 @@ console.log("Creating tags table");
       UNIQUE ("postId", "tagId")
     );
 `);
-console.log("Creating post_tags table");
+    console.log("Creating post_tags table");
 
     console.log("Finished building tables!");
   } catch (error) {
@@ -124,18 +124,21 @@ async function createInitialPosts() {
       title: "First Post",
       content:
         "This is my first post. I hope I love writing blogs as much as I love writing them.",
+      tags: ["#happy", "#anything"],
     });
 
     await createPost({
       authorId: sandra.id,
       title: "sandra post",
       content: "My name is sandra.",
+      tags: ["#happy", "#anything"],
     });
 
     await createPost({
       authorId: glamgal.id,
       title: "glam post",
       content: "This is glam post.",
+      tags: ["#happy", "#anything"],
     });
 
     // a couple more
@@ -154,7 +157,7 @@ async function createInitialTags() {
       "#youcandoanything",
       "#catmandoeverything",
     ]);
-    console.log("starting to add post tags!")
+    console.log("starting to add post tags!");
     const [postOne, postTwo, postThree] = await getAllPosts();
 
     await addTagsToPost(postOne.id, [happy, inspo]);
@@ -219,7 +222,4 @@ async function testDB() {
   }
 }
 
-rebuildDB()
-  .then(testDB)
-  .catch(console.error)
-  .finally(() => client.end());
+rebuildDB().then(testDB).catch(console.error);
