@@ -10,7 +10,7 @@ const {
   createPost,
   createTags,
   addTagsToPost,
-  getPostsByTagName
+  getPostsByTagName,
 } = require("./index");
 
 async function createInitialUsers() {
@@ -204,7 +204,7 @@ async function testDB() {
 
     console.log("Calling updatePost on posts[1], only updating tags");
     const updatePostTagsResult = await updatePost(posts[0].id, {
-      tags: ["#youcandoanything", "#redfish", "#bluefish"]
+      tags: ["#youcandoanything", "#redfish", "#bluefish"],
     });
     console.log("Result:", updatePostTagsResult);
 

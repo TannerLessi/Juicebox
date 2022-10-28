@@ -1,11 +1,13 @@
 const PORT = 3000;
-const express = require('express');
+const express = require("express");
 const server = express();
 server.use(express.json());
 
+require("dotenv").config();
+console.log("this is the dotEnv", process.env.JWT_SECRET);
+
 const morgan = require("morgan");
 server.use(morgan("dev"));
-
 
 server.use((req, res, next) => {
   console.log("<____Body Logger START____>");
