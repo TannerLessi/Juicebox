@@ -1,6 +1,7 @@
 const express = require("express");
 const tagRouter = express.Router();
 const { getAllTags, getPostsByTagName } = require("../db");
+const { requireUser } = require("./utils");
 
 tagRouter.use((req, res, next) => {
   console.log("A request is being made to /tags");
